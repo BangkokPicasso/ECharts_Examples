@@ -1,6 +1,8 @@
 # ECharts Gantt Chart Example
 This project provides an example of creating a Gantt chart using ECharts. You can modify the status and color settings, as well as the data for the Gantt chart via specific textareas in the HTML file.
 
+[DEMO](https://bangkokpicasso.github.io/ECharts_Examples/)
+
 ## Setup
 Include the following CDN links in your HTML file:
 
