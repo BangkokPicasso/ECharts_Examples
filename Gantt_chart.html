@@ -163,13 +163,16 @@ function init_Gantt_chart(){
     document.getElementById("Chart1").style.height = String(Chart_Height) + "px"
 
     let yAxis_Order = 0
+    // Loop through categories
     for (var yAxis = 0; yAxis < categories.length; yAxis++) {
         let yAxis_data = Object.keys(json.data[categories[yAxis]]);
+        // Loop through yAxisData
         for (var bar_data = 0; bar_data < yAxis_data.length; bar_data++) {
             this_data = json.data[categories[yAxis]][bar_data]
             var STime = Number(new Date(this_data.STime).getTime());
             var ETime = Number(new Date(this_data.ETime).getTime());
             let durationFormatted = formatDuration(ETime - STime);
+            // Push data object to data array
             data.push({
                 name: this_data.Status,
                 value: [yAxis_Order, STime, ETime, this_data.Comment, durationFormatted, categories[yAxis]],
@@ -306,6 +309,7 @@ function init_Gantt_chart(){
 
 };
 
+// Function to format duration in "Xdays Xhrs Xmins X secs" format
 function formatDuration(durationMillis) {
     let seconds = Math.floor((durationMillis / 1000) % 60);
     let minutes = Math.floor((durationMillis / (1000 * 60)) % 60);
