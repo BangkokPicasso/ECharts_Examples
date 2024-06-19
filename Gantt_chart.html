@@ -1,0 +1,337 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"content="width=device-width, initial-scale=1.0">
+    <title>ECharts Gantt_Chart_Example</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.1.2/echarts.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+</head>
+
+<style>
+    body {
+        font-size: 1rem;
+        margin: 1.5rem;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    button {
+        margin: 0.5rem;
+    }
+
+</style>
+
+<body>
+    <h1>ECharts Gantt Chart Example</h1>
+    <div class="col-12">
+        <div class="row" style="margin: 15px 0 5px;">
+            <div class="form-inline">
+                <div class="row justify-content-start">
+                    <div class="col-auto" style="background-color:#2DB884; color:ghostwhite;">
+                        Green
+                    </div>
+                    <div class="col-auto" style="background-color:#F8E571; color:#1C1C1C;">
+                        Yellow
+                    </div>
+                    <div class="col-auto" style="background-color:#3B579A; color:ghostwhite;">
+                        Dark Blue
+                    </div>
+                    <div class="col-auto" style="background-color:#D04551; color:ghostwhite;">
+                        Red
+                    </div>
+                    <div class="col-auto" style="background-color:#F1A7B8; color:#1C1C1C;">
+                        Pink
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="Chart1" style='position: relative; width: 100%; height: 500px;'></div>
+
+    <button type="button" class="btn btn-success" onclick="init_Gantt_chart()">Run</button>
+    <div style="margin: 1rem;">
+        <label> status_color_dict </label>
+        <textarea id="status_color_dict" style="width: 100%; height: 200px;">
+            {
+                "Green": "#2DB884",
+                "Yellow": "#F8E571",
+                "Dark Blue": "#3B579A",
+                "Red": "#D04551",
+                "Pink": "#F1A7B8"
+            }
+        </textarea>
+    </div>
+
+    <div style="margin: 1rem;">
+        <label> json data </label>
+        <textarea id="data" style="width: 100%; height: 400px;">
+            {
+                "Start_Time": "2023-01-05T00:00:00.000",
+                "End_Time": "2023-01-05T10:00:00.000",
+                "data": {
+                    "A": {
+                        "0": {
+                            "STime": "2023-01-04 22:40:20",
+                            "ETime": "2023-01-05 01:04:03",
+                            "Comment": "Green stuff",
+                            "Status": "Green"
+                        },
+                        "1": {
+                            "STime": "2023-01-05 01:04:03",
+                            "ETime": "2023-01-05 01:46:45",
+                            "Comment": "Dark Blue stuff",
+                            "Status": "Dark Blue"
+                        },
+                        "2": {
+                            "STime": "2023-01-05 01:46:45",
+                            "ETime": "2023-01-05 09:46:45",
+                            "Comment": "Green Comment",
+                            "Status": "Green"
+                        }
+                    },
+                    "B": {
+                        "0": {
+                            "STime": "2023-01-04 21:40:20",
+                            "ETime": "2023-01-05 02:04:03",
+                            "Comment": "Yellow stuff",
+                            "Status": "Yellow"
+                        },
+                        "1": {
+                            "STime": "2023-01-05 02:04:03",
+                            "ETime": "2023-01-05 02:10:45",
+                            "Comment": "Pink stuff",
+                            "Status": "Pink"
+                        },
+                        "2": {
+                            "STime": "2023-01-05 02:10:45",
+                            "ETime": "2023-01-05 08:00:00",
+                            "Comment": "Red stuff",
+                            "Status": "Red"
+                        },
+                        "3": {
+                            "STime": "2023-01-05 08:00:00",
+                            "ETime": "2023-01-05 09:42:50",
+                            "Comment": "Green stuff",
+                            "Status": "Green"
+                        }
+                    }
+                }
+            }
+        </textarea>
+    </div>    
+
+</body>
+
+<script>
+
+$(function() {
+    init_Gantt_chart();
+})
+
+// Resize All Charts(id starts with 'Chart') when the window is resized
+$(window).on('resize', function() {
+    resizeCharts();
+});
+
+function resizeCharts() {
+  var charts = $("[id^='Chart']");
+  for (var i = 0; i < charts.length; i++) {
+    var chart = document.getElementById(charts[i].id);
+    if (chart && chart.innerHTML !== "No Data") {
+      echarts.init(chart).resize();
+    }
+  }
+}
+
+function init_Gantt_chart(){
+
+    // fetch data
+    let json = JSON.parse(document.getElementById('data').value)
+    let status_color_dict = JSON.parse(document.getElementById('status_color_dict').value)
+
+    let data = [];
+    let myChart1 = echarts.init(document.getElementById('Chart1'));
+
+    let StartTime = new Date(json.Start_Time);
+    let EndtTime = new Date(json.End_Time);
+
+    // Dynamic Chart Height
+    let categories = Object.keys(json.data);
+    let Chart_Height = categories.length * 35 + 150;
+    let Grid_Height = Chart_Height - 110
+    document.getElementById("Chart1").style.height = String(Chart_Height) + "px"
+
+    let yAxis_Order = 0
+    for (var yAxis = 0; yAxis < categories.length; yAxis++) {
+        let yAxis_data = Object.keys(json.data[categories[yAxis]]);
+        for (var bar_data = 0; bar_data < yAxis_data.length; bar_data++) {
+            this_data = json.data[categories[yAxis]][bar_data]
+            var STime = Number(new Date(this_data.STime).getTime());
+            var ETime = Number(new Date(this_data.ETime).getTime());
+            let durationFormatted = formatDuration(ETime - STime);
+            data.push({
+                name: this_data.Status,
+                value: [yAxis_Order, STime, ETime, this_data.Comment, durationFormatted, categories[yAxis]],
+                itemStyle: {
+                    normal: {
+                        color: status_color_dict[this_data.Status]
+                    }
+                }
+            });
+            
+        }
+        yAxis_Order += 1
+    };
+
+    function renderItem(params, api) {
+        var categoryIndex = api.value(0);
+        var start = api.coord([api.value(1), categoryIndex]);
+        var end = api.coord([api.value(2), categoryIndex]);
+        var height = api.size([0, 1])[1] * 0.6;
+        var rectShape = echarts.graphic.clipRectByRect(
+            {
+                x: start[0],
+                y: start[1] - height / 2,
+                width: end[0] - start[0],
+                height: height
+            },
+            {
+                x: params.coordSys.x,
+                y: params.coordSys.y,
+                width: params.coordSys.width,
+                height: params.coordSys.height
+            }
+        );
+        return (
+            rectShape && {
+                type: 'rect',
+                transition: ['shape'],
+                shape: rectShape,
+                style: api.style()
+            }
+        );
+    };
+    
+    var option;
+    option = {
+        title: {
+            left: 'center',
+            text: 'ECharts Gantt Chart'
+        },
+        tooltip: {
+            formatter: function (params) {
+                return `
+                        Category：${params.value[5]}<br/>
+                        Status：${params.marker}${params.name}<br/>
+                        Start Time：${new Date(params.value[1]).toLocaleString('ja-JP')}<br/>
+                        End Time：${new Date(params.value[2]).toLocaleString('ja-JP')}<br/>
+                        Period：${params.value[4]}<br/>
+                        Comment：${params.value[3]}
+                        `;
+            },
+        },
+        backgroundColor: "#F2F4F7",
+        dataZoom: [
+            {
+                type: 'slider',
+                filterMode: 'weakFilter',
+                showDataShadow: false,
+                bottom: 15,
+                labelFormatter: ''
+            },
+        ],
+        grid: {
+            height: Grid_Height,
+            color: '#113285',
+            containLabel: true, //防止lable溢出
+        },
+        xAxis: {
+            splitNumber: 6,
+            min: Number(new Date(StartTime).getTime()),
+            max: Number(new Date(EndtTime).getTime()),
+            scale: true,
+            axisLabel: {
+                formatter: function (StartTime) {
+                    xAxis = Number(new Date(StartTime).getTime()) - 43200000  // - 12hrs
+                    for (var i = 1; i < 25; i++) {
+                        xAxis += 1800000
+                    }
+                    var Time = new Date(xAxis).toLocaleString('ja-JP').substring(9, 18).split(":")
+                    Time = Time[0] + ":" + Time[1]
+                    return Time
+                },
+                fontFamily: 'Microsoft YaHei',
+                fontWeight: 'bold',
+                color: "#444444",
+            },
+            splitArea: {
+                show: true,
+            },
+            splitLine:{
+                lineStyle:{
+                    color: "#8E8E8E",
+                }, 
+            },
+        },
+        yAxis: {
+        data: categories,
+        axisLabel: {
+            fontFamily: 'Microsoft YaHei',
+            fontWeight: 'bold',
+            color: "#444444",
+            fontSize: '14',
+        }
+        },
+        series: [
+            {
+                type: 'custom',
+                renderItem: renderItem,
+                itemStyle: {
+                    opacity: 0.80,
+                    borderWidth: 1,
+                    borderColor: '#0C0C0C'
+                },
+                encode: {
+                    x: [1, 2],
+                    y: 0
+                },
+                data: data,
+            }
+        ]
+    };
+    myChart1.clear();
+    myChart1.resize();
+    myChart1.setOption(option, true);
+
+};
+
+function formatDuration(durationMillis) {
+    let seconds = Math.floor((durationMillis / 1000) % 60);
+    let minutes = Math.floor((durationMillis / (1000 * 60)) % 60);
+    let hours = Math.floor((durationMillis / (1000 * 60 * 60)) % 24);
+    let days = Math.floor(durationMillis / (1000 * 60 * 60 * 24));
+    
+    let formattedDuration = "";
+    
+    if (days > 0) {
+        formattedDuration += days + " days ";
+    }
+    if (hours > 0) {
+        formattedDuration += hours + " hrs ";
+    }
+    if (minutes > 0) {
+        formattedDuration += minutes + " mins ";
+    }
+    if (seconds > 0) {
+        formattedDuration += seconds + " secs";
+    }
+    
+    return formattedDuration.trim();
+}
+
+</script>
+
+
+
+</html>
